@@ -22,10 +22,15 @@ CSV.open(output_filename, 'w') do |csv|
   case_tables.each do |case_table|
     case_info = {}
 
-    # Extract the case number, petitioner, and respondent
+    # Extract the case number
     headline = case_table.css('dt')
     case_number_raw = headline.children.first.text.strip
+
+    # If this is not an 'LT-' case, skip it.
+    next unless %r{LT-}.match?(case_number_raw)
     case_info[:case_no] = %r{(LT-\d+-\d+\/..) -}.match(case_number_raw)[1]
+
+    # Extract the petitioner and respondent
     parties = headline.css('a').first.text.split(' vs. ')
     case_info[:petitioner] = parties.first
     case_info[:respondent] = parties.last
