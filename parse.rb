@@ -40,7 +40,11 @@ CSV.open(output_filename, 'w') do |csv|
     part_raw = court_part_raw.split('/').last
     case_info[:court] = %r{Part: (.*)$}.match(part_raw)[1]
 
-    # TODO: extract other info
+    # Does the respondent have an attorney?
+    def_has_attorney = case_table.css('dd').any?{|node| node.text.include?('Defendant Attorney:')}
+    case_info[:def_attorney] = def_has_attorney ? 'Yes' : 'No'
+
+    # TODO
 
     csv << COLUMNS.map{|col| case_info[col]}
     rows_written += 1
