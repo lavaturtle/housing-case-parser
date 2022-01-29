@@ -1,7 +1,8 @@
 #! /usr/bin/env ruby
 
-require 'nokogiri'
 require 'csv'
+require 'nokogiri'
+require 'time'
 
 input_filename = ARGV[0]
 output_filename = 'output.csv'
@@ -19,7 +20,15 @@ rows_written = 0
 CSV.open(output_filename, 'w') do |csv|
   csv << COLUMNS
 
+  current_date = nil
+
   case_tables.each do |case_table|
+    # See if there's a date header at the top of this listing
+    date_header = case_table.css('th')
+    if date_header.any?
+      current_date = Date.parse(date_header.text)
+    end
+
     case_info = {}
 
     # Extract the case number
@@ -44,7 +53,11 @@ CSV.open(output_filename, 'w') do |csv|
     def_has_attorney = case_table.css('dd').any?{|node| node.text.include?('Defendant Attorney:')}
     case_info[:def_attorney] = def_has_attorney ? 'Yes' : 'No'
 
-    # TODO
+    # Extract the time and combine it with the date
+    time_el = case_table.css('dd').find{|node| node.text.start_with?('Time:')}
+    time_string = %r{Time: (.*)}.match(time_el.text)[1]
+    case_datetime = Time.parse(time_string, current_date)
+    case_info[:court_date] = case_datetime.iso8601
 
     csv << COLUMNS.map{|col| case_info[col]}
     rows_written += 1
