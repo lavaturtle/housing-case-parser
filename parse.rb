@@ -31,9 +31,14 @@ CSV.open(output_filename, 'w') do |csv|
     case_info[:case_no] = %r{(LT-\d+-\d+\/..) -}.match(case_number_raw)[1]
 
     # Extract the petitioner and respondent
-    parties = headline.css('a').first.text.split(' vs. ')
-    case_info[:petitioner] = parties.first
-    case_info[:respondent] = parties.last
+    petitioner, respondent = headline.css('a').first.text.split(' vs. ')
+    case_info[:petitioner] = petitioner
+    case_info[:respondent] = respondent
+
+    # Extract court part
+    court_part_raw = case_table.css('dd').first.text
+    part_raw = court_part_raw.split('/').last
+    case_info[:court] = %r{Part: (.*)$}.match(part_raw)[1]
 
     # TODO: extract other info
 
